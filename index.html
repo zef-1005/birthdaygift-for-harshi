@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For Harshitha ✨</title>
+    
+    <!-- Cinematic Editorial Typography: Cinzel & Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;1,200&display=swap" rel="stylesheet">
+    
+    <!-- Three.js 3D Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #030206;
+            font-family: 'Cinzel', serif;
+            color: #fdfaf0;
+        }
+
+        /* WebGL Canvas Container */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Deep Cosmic Vignette Overlay for Depth Perception */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            background: radial-gradient(circle at center, rgba(3, 2, 6, 0.1) 20%, rgba(3, 2, 6, 0.88) 100%);
+        }
+
+        /* Subtle Grain Overlay for Organic Cinematic Feel */
+        .film-grain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Interactive UI Overlay Container */
+        .ui-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            pointer-events: none;
+        }
+
+        .story-text {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            color: #fff8e8;
+            text-shadow: 0 0 25px rgba(255, 202, 112, 0.4), 0 0 50px rgba(255, 157, 59, 0.2);
+            opacity: 0;
+            transform: scale(0.92) translateZ(0);
+            transition: opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1), transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: absolute;
+            width: 90%;
+            max-width: 950px;
+            line-height: 1.35;
+            pointer-events: none;
+        }
+
+        .story-text.active {
+            opacity: 1;
+            transform: scale(1) translateZ(0);
+        }
+
+        /* Grand Birthday Title Styling */
+        .birthday-title {
+            font-size: clamp(2.8rem, 8vw, 6.2rem);
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            background: linear-gradient(135deg, #ffffff 0%, #ffdf9e 40%, #ffaa42 80%, #ffd084 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(255, 175, 70, 0.35);
+            margin-bottom: 1.2rem;
+            line-height: 1.15;
+        }
+
+        .birthday-sub {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(0.95rem, 2.2vw, 1.3rem);
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            color: rgba(255, 235, 210, 0.85);
+            text-transform: none;
+            line-height: 1.6;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        /* Dynamic Tap Hint Indicator */
+        .tap-hint {
+            position: absolute;
+            bottom: 3.5rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 400;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: rgba(255, 238, 210, 0.85);
+            text-shadow: 0 0 12px rgba(255, 180, 80, 0.6), 0 2px 4px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            animation: pulseHint 3s infinite ease-in-out;
+            transition: opacity 0.8s ease, bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s ease;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* Step 3 layout adjustment: shifted directly below the birthday wishes block */
+        .tap-hint.step-3-pos {
+            bottom: 12vh;
+        }
+
+        /* Hide completely on Step 4 */
+        .tap-hint.hidden-hint {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            display: none !important;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { opacity: 0.35; transform: translateY(0); }
+            50% { opacity: 0.95; transform: translateY(-6px); }
+        }
+
+        /* Interactive Download Game Redirect Button */
+        .game-btn {
+            margin-top: 2.5rem;
+            padding: 1.1rem 2.8rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 400;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(255, 200, 120, 0.12), rgba(255, 140, 40, 0.08));
+            border: 1px solid rgba(255, 210, 140, 0.35);
+            border-radius: 50px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            cursor: pointer;
+            pointer-events: none !important; /* Block all interactions initially */
+            visibility: hidden;              /* Totally hidden from tap target tree */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, border-color 0.3s ease;
+            box-shadow: 0 0 25px rgba(255, 170, 60, 0.15);
+            outline: none;
+        }
+
+        .game-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 210, 140, 0.25), rgba(255, 150, 50, 0.2));
+            border-color: rgba(255, 230, 180, 0.7);
+            transform: translateY(0) scale(1.04);
+            box-shadow: 0 0 40px rgba(255, 180, 80, 0.4);
+        }
+
+        .game-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Active visible state only when step 4 is ready */
+        .game-btn.visible {
+            visibility: visible;
+            pointer-events: auto !important;
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div class="vignette"></div>
+    <div class="film-grain"></div>
+
+    <div class="ui-container">
+        <div class="story-text active" id="step-0">hi...</div>
+        <div class="story-text" id="step-1">today is a special day...</div>
+        <div class="story-text" id="step-2">I made something for you.</div>
+        <div class="story-text" id="step-3">
+            <div class="birthday-title">Happy Birthday,<br>Harshitha</div>
+            <div class="birthday-sub">May your universe always be filled with light and wonder.</div>
+        </div>
+        <div class="story-text" id="step-4">
+            I have a small game for you to play...
+            <br>
+            <button class="game-btn" id="gameBtn" onclick="redirectToGame(event)">Download Game ↓</button>
+        </div>
+    </div>
+
+    <div class="tap-hint" id="tapHint">tap anywhere to continue</div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 4;
+        let isTransitioning = false;
+
+        const hint = document.getElementById('tapHint');
+        setTimeout(() => { hint.style.opacity = '1'; }, 2200);
+
+        // --- MAGICAL CRYSTAL CHIME AUDIO SYNTHESIZER ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playMagicalCrystalSound(step) {
+            if (!audioCtx) return;
+
+            try {
+                const now = audioCtx.currentTime;
+
+                // 1. Warm Deep Cosmic Sub Resonance
+                const subOsc = audioCtx.createOscillator();
+                const subGain = audioCtx.createGain();
+                subOsc.type = 'sine';
+                subOsc.frequency.setValueAtTime(55 + step * 10, now);
+                subOsc.frequency.exponentialRampToValueAtTime(30, now + 1.8);
+
+                subGain.gain.setValueAtTime(0.001, now);
+                subGain.gain.linearRampToValueAtTime(0.25, now + 0.05);
+                subGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+
+                subOsc.connect(subGain);
+                subGain.connect(audioCtx.destination);
+                subOsc.start(now);
+                subOsc.stop(now + 2.0);
+
+                // 2. High Crystalline Glass-Chime Frequencies
+                const crystalScale = [
+                    1046.50, // C6
+                    1318.51, // E6
+                    1567.98, // G6
+                    1975.53, // B6
+                    2093.00, // C7
+                    2637.02, // E7
+                    3135.96  // G7
+                ];
+
+                const arpeggioIndices = [
+                    [0, 2, 4],
+                    [1, 3, 5],
+                    [0, 2, 4, 6],
+                    [0, 1, 2, 4, 5, 6],
+                    [2, 4, 5, 6]
+                ];
+
+                const notesToPlay = arpeggioIndices[step % arpeggioIndices.length];
+
+                notesToPlay.forEach((scaleIdx, i) => {
+                    const noteFreq = crystalScale[scaleIdx];
+                    const delay = i * 0.065;
+
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(noteFreq, now + delay);
+                    osc.frequency.exponentialRampToValueAtTime(noteFreq * 0.995, now + delay + 2.2);
+
+                    gain.gain.setValueAtTime(0.0001, now + delay);
+                    gain.gain.linearRampToValueAtTime(0.12, now + delay + 0.012);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 2.2);
+
+                    const overtone = audioCtx.createOscillator();
+                    const overtoneGain = audioCtx.createGain();
+                    overtone.type = 'triangle';
+                    overtone.frequency.setValueAtTime(noteFreq * 2.005, now + delay);
+
+                    overtoneGain.gain.setValueAtTime(0.0001, now + delay);
+                    overtoneGain.gain.linearRampToValueAtTime(0.04, now + delay + 0.01);
+                    overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 1.2);
+
+                    osc.connect(gain);
+                    overtone.connect(overtoneGain);
+
+                    gain.connect(audioCtx.destination);
+                    overtoneGain.connect(audioCtx.destination);
+
+                    osc.start(now + delay);
+                    overtone.start(now + delay);
+
+                    osc.stop(now + delay + 2.3);
+                    overtone.stop(now + delay + 1.3);
+                });
+
+            } catch (e) {
+                console.log("Audio notice:", e);
+            }
+        }
+
+        function nextStep() {
+            if (isTransitioning || currentStep >= totalSteps) return;
+            isTransitioning = true;
+
+            initAudio();
+            playMagicalCrystalSound(currentStep);
+
+            const currentEl = document.getElementById(`step-${currentStep}`);
+            currentEl.classList.remove('active');
+
+            currentStep++;
+            
+            // Trigger WebGL 3D Camera Zoom Warp
+            triggerCameraWarp(currentStep);
+
+            setTimeout(() => {
+                const nextEl = document.getElementById(`step-${currentStep}`);
+                nextEl.classList.add('active');
+                
+                // Dynamically update tap hint position / visibility based on step
+                if (currentStep === 3) {
+                    hint.classList.add('step-3-pos');
+                    isTransitioning = false;
+                } else if (currentStep === totalSteps) {
+                    hint.classList.add('hidden-hint'); // Permanently remove tap hint on Step 4
+                    setTimeout(() => {
+                        const btn = document.getElementById('gameBtn');
+                        btn.classList.add('visible');
+                        isTransitioning = false;
+                    }, 900);
+                } else {
+                    isTransitioning = false;
+                }
+            }, 1000);
+        }
+
+        // Tap screen events ONLY advance story steps (never trigger navigation)
+        window.addEventListener('click', (e) => {
+            if (e.target.id !== 'gameBtn') nextStep();
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.id !== 'gameBtn') nextStep();
+        }, { passive: true });
+
+        // EXPLICIT REDIRECT: Triggered ONLY when explicitly tapping active #gameBtn
+        function redirectToGame(event) {
+            if (currentStep !== totalSteps) return;
+            event.stopPropagation();
+            event.preventDefault();
+
+            initAudio();
+            playMagicalCrystalSound(4);
+
+            setTimeout(() => {
+                window.location.href = "install.html";
+            }, 350);
+        }
+
+        const container = document.getElementById('canvas-container');
+        
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030206, 0.00065);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2500);
+        camera.position.z = 1000;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // --- STARFIELD CREATION (15,000 Particles) ---
+        const starCount = 15000;
+        const starGeometry = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(starCount * 3);
+        const starColors = new Float32Array(starCount * 3);
+        const starSizes = new Float32Array(starCount);
+
+        const palette = [
+            new THREE.Color(0xffffff),
+            new THREE.Color(0xffca70),
+            new THREE.Color(0xff9d3b),
+            new THREE.Color(0xfdfaf0),
+            new THREE.Color(0xe3d3ff)
+        ];
+
+        for (let i = 0; i < starCount; i++) {
+            const r = 80 + Math.random() * 1600;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+
+            starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+            starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+            starPositions[i * 3 + 2] = r * Math.cos(phi);
+
+            const col = palette[Math.floor(Math.random() * palette.length)];
+            starColors[i * 3] = col.r;
+            starColors[i * 3 + 1] = col.g;
+            starColors[i * 3 + 2] = col.b;
+
+            starSizes[i] = Math.random() * 2.8 + 0.6;
+        }
+
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+        starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+
+        const starMaterial = new THREE.PointsMaterial({
+            size: 2.2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.88,
+            blending: THREE.AdditiveBlending
+        });
+
+        const starField = new THREE.Points(starGeometry, starMaterial);
+        scene.add(starField);
+
+        const createNebulaTexture = (colorRGBA) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+            grad.addColorStop(0, colorRGBA);
+            grad.addColorStop(0.4, colorRGBA.replace('1)', '0.25)'));
+            grad.addColorStop(0.8, colorRGBA.replace('1)', '0.05)'));
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 256, 256);
+
+            return new THREE.CanvasTexture(canvas);
+        };
+
+        const nebulaGroup = new THREE.Group();
+
+        const nebulaConfigs = [
+            { color: 'rgba(255, 180, 80, 1)', pos: [0, 0, 150], scale: 950, opacity: 0.35 },
+            { color: 'rgba(255, 140, 40, 1)', pos: [-250, 120, -100], scale: 1100, opacity: 0.3 },
+            { color: 'rgba(253, 250, 240, 1)', pos: [280, -150, -250], scale: 850, opacity: 0.25 },
+            { color: 'rgba(200, 120, 255, 1)', pos: [-100, -200, -400], scale: 1200, opacity: 0.18 },
+            { color: 'rgba(255, 202, 112, 1)', pos: [150, 220, 300], scale: 750, opacity: 0.28 }
+        ];
+
+        nebulaConfigs.forEach(cfg => {
+            const mat = new THREE.SpriteMaterial({
+                map: createNebulaTexture(cfg.color),
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                opacity: cfg.opacity
+            });
+            const sprite = new THREE.Sprite(mat);
+            sprite.position.set(...cfg.pos);
+            sprite.scale.set(cfg.scale, cfg.scale, 1);
+            nebulaGroup.add(sprite);
+        });
+
+        scene.add(nebulaGroup);
+
+        let targetZ = 1000;
+        let mouseX = 0, mouseY = 0;
+
+        function triggerCameraWarp(step) {
+            targetZ = 1000 - (step * 210);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.0006;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.0006;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                mouseX = (e.touches[0].clientX - window.innerWidth / 2) * 0.0006;
+                mouseY = (e.touches[0].clientY - window.innerHeight / 2) * 0.0006;
+            }
+        }, { passive: true });
+
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (e) => {
+                if (e.gamma && e.beta) {
+                    mouseX = (e.gamma) * 0.003;
+                    mouseY = (e.beta - 45) * 0.003;
+                }
+            }, { passive: true });
+        }
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            camera.position.z += (targetZ - camera.position.z) * 0.035;
+            camera.position.x += (mouseX * 220 - camera.position.x) * 0.025;
+            camera.position.y += (-mouseY * 220 - camera.position.y) * 0.025;
+            camera.lookAt(scene.position);
+
+            starField.rotation.y = elapsedTime * 0.012;
+            starField.rotation.x = elapsedTime * 0.006;
+
+            nebulaGroup.rotation.y = elapsedTime * 0.008;
+            nebulaGroup.rotation.z = Math.sin(elapsedTime * 0.05) * 0.05;
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = function() {
+            animate();
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

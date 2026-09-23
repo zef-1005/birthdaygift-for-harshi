@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        darkBg: '#080511',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #080511;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(18, 12, 36, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(167, 139, 250, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Magical Glowing Buttons */
+        .magic-btn-android {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 95, 70, 0.4));
+            border: 2px solid rgba(52, 211, 153, 0.6);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .magic-btn-android:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 0 35px rgba(52, 211, 153, 0.6), inset 0 0 15px rgba(167, 243, 208, 0.3);
+            border-color: #6ee7b7;
+        }
+
+        .magic-btn-windows {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(12, 74, 96, 0.4));
+            border: 2px solid rgba(56, 189, 248, 0.6);
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .magic-btn-windows:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.6), inset 0 0 15px rgba(186, 230, 253, 0.3);
+            border-color: #38bdf8;
+        }
+
+        /* Fullscreen Canvas Layers */
+        #bgCanvas, #magicCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+
+        #bgCanvas {
+            z-index: 0;
+        }
+
+        #magicCanvas {
+            z-index: 10;
+        }
+
+        .view-section {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .hidden-view {
+            display: none;
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        .visible-view {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080511;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b0764;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-purple-600 selection:text-white">
+
+    <!-- Background Animated Canvas -->
+    <canvas id="bgCanvas"></canvas>
+    <!-- Click Particle Burst Overlay Canvas -->
+    <canvas id="magicCanvas"></canvas>
+
+    <main class="relative z-20 flex-grow flex items-center justify-center p-4 md:p-8">
+        
+        <!-- ================= HOME VIEW ================= -->
+        <section id="view-home" class="view-section visible-view w-full max-w-2xl mx-auto text-center space-y-8 my-auto">
+            
+            <!-- Detected Device Display Badge -->
+            <div class="inline-flex items-center space-x-3 px-5 py-2.5 rounded-full glass-card border-purple-500/30 text-sm font-medium text-purple-200 shadow-lg">
+                <span class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <i id="detectedDeviceIcon" data-lucide="laptop" class="w-5 h-5 text-purple-300"></i>
+                <span>Detected Device: <strong id="detectedDeviceName" class="text-amber-300 font-bold">Detecting...</strong></span>
+            </div>
+
+            <!-- Simple Heading -->
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">
+                    Select Your Operating System
+                </h1>
+                <p class="text-purple-200/70 text-sm sm:text-base">
+                    Choose your device platform below to view the download link and instructions.
+                </p>
+            </div>
+
+            <!-- Two Operating System Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                
+                <!-- Phone (Android) Button -->
+                <button onclick="handleBtnClick(event, 'android')" class="magic-btn-android p-6 rounded-2xl cursor-pointer flex flex-col items-center justify-center text-center space-y-3">
+                    <div class="w-14 h-14 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center">
+                        <i data-lucide="smartphone" class="w-8 h-8 text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Phone</h2>
+                        <p class="text-xs text-emerald-200/80 font-medium mt-1">Android</p>
+                    </div>
+                </button>
+
+                <!-- PC / Desktop (Windows) Button -->
+                <button onclick="handleBtnClick(event, 'windows')" class="magic-btn-windows p-6 rounded-2xl cursor-pointer flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden">
+                    <span class="absolute top-2 right-2 px-2 py-0.5 bg-sky-500/20 border border-sky-400/40 text-sky-300 text-[10px] font-semibold rounded-full">
+                        Recommended
+                    </span>
+                    <div class="w-14 h-14 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center">
+                        <i data-lucide="monitor" class="w-8 h-8 text-sky-300"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">PC / Desktop</h2>
+                        <p class="text-xs text-sky-200/80 font-medium mt-0.5">Windows</p>
+                        <p class="text-[11px] text-sky-300/90 italic mt-1 font-medium">(Recommended for best experience)</p>
+                    </div>
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- ================= ANDROID STEPS VIEW ================= -->
+        <section id="view-android" class="view-section hidden-view w-full max-w-xl mx-auto my-auto">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6 border-emerald-500/30">
+                
+                <div class="flex items-center space-x-3 border-b border-purple-500/20 pb-4">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center">
+                        <i data-lucide="smartphone" class="w-6 h-6 text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Phone (Android) Installation Guide</h2>
+                        <p class="text-xs text-purple-200/70">Follow these easy steps to get started</p>
+                    </div>
+                </div>
+
+                <!-- Steps List -->
+                <div class="space-y-4">
+
+                    <!-- Step 1 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center text-xs border border-emerald-400/40">1</span>
+                            <h3 class="text-sm font-bold text-white">Open the Google Drive Link</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Click the button below to access the Android folder.</p>
+                        <div class="pl-10 pt-1">
+                            <a href="https://drive.google.com/drive/folders/14GqgewZbMEDVLdQKZeDW9JNfytUnU1gb?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-lg shadow-emerald-900/30">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Open Android Drive Folder</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center text-xs border border-emerald-400/40">2</span>
+                            <h3 class="text-sm font-bold text-white">Download the APK File</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Inside the folder, tap on the APK file and select <strong>Download</strong>.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-400/40">3</span>
+                            <h3 class="text-sm font-bold text-amber-200">Allow "Install Unknown Apps"</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/90 pl-10 leading-relaxed">
+                            If your browser or device prompts a security message, tap <strong>Settings</strong> on the popup and turn on <strong>"Allow from this source"</strong> (or enable "Unknown Sources").
+                        </p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center text-xs border border-emerald-400/40">4</span>
+                            <h3 class="text-sm font-bold text-white">Install and Open</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Open the downloaded file from your notifications or Downloads folder and tap <strong>Install</strong>.</p>
+                    </div>
+
+                </div>
+
+                <!-- Back Button -->
+                <div class="pt-2 flex justify-center">
+                    <button onclick="navigateTo('home')" class="px-6 py-2.5 rounded-xl glass-card hover:border-purple-400 text-xs font-semibold text-purple-200 hover:text-white transition flex items-center space-x-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Back to Options</span>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================= WINDOWS STEPS VIEW ================= -->
+        <section id="view-windows" class="view-section hidden-view w-full max-w-xl mx-auto my-auto">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6 border-sky-500/30">
+                
+                <div class="flex items-center space-x-3 border-b border-purple-500/20 pb-4">
+                    <div class="w-10 h-10 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center">
+                        <i data-lucide="monitor" class="w-6 h-6 text-sky-300"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">PC / Desktop (Windows) Installation Guide</h2>
+                        <p class="text-xs text-purple-200/70">Follow these easy steps to get started</p>
+                    </div>
+                </div>
+
+                <!-- Steps List -->
+                <div class="space-y-4">
+
+                    <!-- Step 1 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center text-xs border border-sky-400/40">1</span>
+                            <h3 class="text-sm font-bold text-white">Open the Google Drive Link</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Click the button below to access the PC / Windows folder.</p>
+                        <div class="pl-10 pt-1">
+                            <a href="https://drive.google.com/drive/folders/1MwPcxyljyz5inv7t4jgGizPsMxzeSsZY?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition shadow-lg shadow-sky-900/30">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Open Windows Drive Folder</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center text-xs border border-sky-400/40">2</span>
+                            <h3 class="text-sm font-bold text-white">Download the File</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Download the installer or zip file from the Google Drive folder onto your PC.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center text-xs border border-sky-400/40">3</span>
+                            <h3 class="text-sm font-bold text-white">Run the Setup File</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Go to your Downloads folder and double-click the file to open and run it.</p>
+                    </div>
+
+                    <!-- Step 4 (SmartScreen Tip) -->
+                    <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-400/40">4</span>
+                            <h3 class="text-sm font-bold text-amber-200">If Windows SmartScreen Appears</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/90 pl-10 leading-relaxed">
+                            If a blue popup says "Windows protected your PC", click <strong>"More info"</strong> and then click <strong>"Run anyway"</strong>.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Back Button -->
+                <div class="pt-2 flex justify-center">
+                    <button onclick="navigateTo('home')" class="px-6 py-2.5 rounded-xl glass-card hover:border-purple-400 text-xs font-semibold text-purple-200 hover:text-white transition flex items-center space-x-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Back to Options</span>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================= WINDOWS STEPS VIEW ================= -->
+        <section id="view-windows" class="view-section hidden-view w-full max-w-xl mx-auto my-auto">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6 border-sky-500/30">
+                
+                <div class="flex items-center space-x-3 border-b border-purple-500/20 pb-4">
+                    <div class="w-10 h-10 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center">
+                        <i data-lucide="monitor" class="w-6 h-6 text-sky-300"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Windows Guide</h2>
+                        <p class="text-xs text-purple-200/70">Follow these simple steps to install the app</p>
+                    </div>
+                </div>
+
+                <!-- Steps List -->
+                <div class="space-y-4">
+
+                    <!-- Step 1 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center text-xs border border-sky-400/40">1</span>
+                            <h3 class="text-sm font-bold text-white">Open Link & Download Setup</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Click the button below to open Google Drive and download the <code class="px-1.5 py-0.5 rounded bg-purple-900/80 text-sky-300 font-mono text-xs">.exe</code> setup file.</p>
+                        <div class="pl-10 pt-1">
+                            <!-- Direct Link Replace Here -->
+                            <a href="https://drive.google.com/file/d/your-windows-file/view" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Open Google Drive</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-sky-500/20 text-sky-300 font-bold flex items-center justify-center text-xs border border-sky-400/40">2</span>
+                            <h3 class="text-sm font-bold text-white">Run the Setup File</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/80 pl-10">Go to your Downloads folder, double-click the file, and follow the setup instructions.</p>
+                    </div>
+
+                    <!-- Step 3 (SmartScreen Tip) -->
+                    <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs border border-amber-400/40">3</span>
+                            <h3 class="text-sm font-bold text-amber-200">If Windows SmartScreen Appears</h3>
+                        </div>
+                        <p class="text-xs text-purple-200/90 pl-10 leading-relaxed">
+                            If a blue Windows protection popup shows up, click <strong>"More info"</strong> and then click <strong>"Run anyway"</strong>.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Back Button -->
+                <div class="pt-2 flex justify-center">
+                    <button onclick="navigateTo('home')" class="px-6 py-2.5 rounded-xl glass-card hover:border-purple-400 text-xs font-semibold text-purple-200 hover:text-white transition flex items-center space-x-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Back to OS Selection</span>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            detectDevice();
+            initStarfieldCanvas();
+            initMagicCanvas();
+        });
+
+        // Detect Operating System
+        function detectDevice() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const devNameElem = document.getElementById('detectedDeviceName');
+            const devIconElem = document.getElementById('detectedDeviceIcon');
+
+            let os = "Desktop / PC";
+            let icon = "laptop";
+
+            if (/android/i.test(ua)) {
+                os = "Android Device";
+                icon = "smartphone";
+            } else if (/Win/i.test(ua)) {
+                os = "Windows PC";
+                icon = "monitor";
+            } else if (/iPad|iPhone|iPod/.test(ua)) {
+                os = "iOS / iPhone";
+                icon = "tablet-smartphone";
+            } else if (/Mac/i.test(ua)) {
+                os = "Mac Computer";
+                icon = "laptop";
+            }
+
+            devNameElem.textContent = os;
+            devIconElem.setAttribute('data-lucide', icon);
+            lucide.createIcons();
+        }
+
+        // View Navigation
+        function navigateTo(targetView) {
+            const views = ['home', 'android', 'windows'];
+            views.forEach(v => {
+                const elem = document.getElementById(`view-${v}`);
+                if (v === targetView) {
+                    elem.classList.remove('hidden-view');
+                    elem.classList.add('visible-view');
+                } else {
+                    elem.classList.remove('visible-view');
+                    elem.classList.add('hidden-view');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleBtnClick(e, portalType) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const particleColor = portalType === 'android' ? '#34d399' : '#38bdf8';
+            triggerMagicParticleBurst(centerX, centerY, particleColor, 40);
+
+            setTimeout(() => {
+                navigateTo(portalType);
+            }, 250);
+        }
+
+        /* Subtle Ambient Starfield Canvas */
+        function initStarfieldCanvas() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const stars = [];
+            const numStars = Math.min(Math.floor(window.innerWidth * 0.1), 80);
+
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 0.5,
+                    alpha: Math.random(),
+                    speed: Math.random() * 0.015 + 0.005,
+                    color: ['#a78bfa', '#c084fc', '#38bdf8', '#34d399'][Math.floor(Math.random() * 4)]
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                grad.addColorStop(0, '#080511');
+                grad.addColorStop(0.5, '#0f0821');
+                grad.addColorStop(1, '#05020a');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                stars.forEach(star => {
+                    star.alpha += star.speed;
+                    if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = star.color;
+                    ctx.globalAlpha = Math.max(0, Math.min(1, star.alpha));
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1.0;
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        /* Interactive Particle Burst Canvas */
+        let activeParticles = [];
+
+        function initMagicCanvas() {
+            const canvas = document.getElementById('magicCanvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = activeParticles.length - 1; i >= 0; i--) {
+                    const p = activeParticles[i];
+                    p.update();
+                    p.draw(ctx);
+                    if (p.life <= 0) {
+                        activeParticles.splice(i, 1);
+                    }
+                }
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        class Particle {
+            constructor(x, y, color, vx, vy, size, maxLife) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = vx;
+                this.vy = vy;
+                this.size = size;
+                this.maxLife = maxLife;
+                this.life = maxLife;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+            }
+
+            draw(ctx) {
+                const alpha = Math.max(0, this.life / this.maxLife);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function triggerMagicParticleBurst(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1.5;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                const size = Math.random() * 3 + 1;
+                const maxLife = Math.random() * 25 + 20;
+
+                activeParticles.push(new Particle(x, y, color, vx, vy, size, maxLife));
+            }
+        }
+    </script>
+</body>
+</html>
